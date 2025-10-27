@@ -98,16 +98,19 @@ router.post("/verify", express.json(), async (req, res) => {
   }
 });
 
-// GET /api/kyc/status/:address
 router.get("/status/:address", async (req, res) => {
   try {
-    const address = req.params.address;
-    if (!address) {
-      return res.status(400).json({ error: "Missing address" });
+    let address = req.params.address;
+    if (!address) return res.status(400).json({ error: "Missing address" });
+
+    // If someone sends userId with timestamp, strip it
+    if (address.includes(":")) {
+      address = address.split(":")[0];
     }
 
-    // Read on-chain state via your blockchain helper
-    // Implement a helper getKycStatus(address) that returns { verified, ipfsHash, timestamp }
+    const { ethers } = require("ethers");
+    if (!ethers.isAddress(address)) return res.status(400).json({ error: "Invalid Ethereum address" });
+
     const { getKycStatus } = require("../blockchain");
     const status = await getKycStatus(address);
 
@@ -117,5 +120,7 @@ router.get("/status/:address", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
 
 module.exports = router;

@@ -1,12 +1,11 @@
-// backend/blockchain.js
 require("dotenv").config();
 const { ethers } = require("ethers");
 
-const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:8545";
+const RPC_URL = process.env.RPC_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 
-// Minimal ABI for KycRegistry
+// Minimal ABI
 const ABI = [
   "function setKycStatus(address user, bool verified, string ipfsHash) public",
   "function getKycStatus(address user) public view returns (bool, string, uint256)"
@@ -17,25 +16,21 @@ if (!PRIVATE_KEY || !CONTRACT_ADDRESS) {
 }
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = PRIVATE_KEY ? new ethers.Wallet(PRIVATE_KEY, provider) : null;
-const contract = CONTRACT_ADDRESS ? new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet || provider) : null;
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
 
+// Send KYC status tx on Sepolia
 async function setKycStatusOnChain(address, verified, ipfsHash) {
-  if (!wallet || !contract) {
-    throw new Error("Wallet or contract not configured. Check .env values.");
-  }
+  if (!wallet || !contract) throw new Error("Wallet or contract not configured");
   const tx = await contract.setKycStatus(address, verified, ipfsHash);
-  // ethers v6 returns a TransactionResponse with wait()
-  const receipt = await tx.wait();
+  const receipt = await tx.wait(); // wait for confirmation
   return receipt;
 }
 
+// Read KYC status from Sepolia
 async function getKycStatus(address) {
-  if (!contract) {
-    throw new Error("Contract not configured. Check .env values.");
-  }
+  if (!contract) throw new Error("Contract not configured");
   const result = await contract.getKycStatus(address);
-  // Normalize v6 result tuple
   const verified = result[0];
   const ipfsHash = result[1];
   const timestamp = typeof result[2] === "bigint" ? Number(result[2]) : result[2];
