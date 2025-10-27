@@ -89,7 +89,8 @@ npm run dev
 
 - Approve MetaMask popups for all verification transactions
 
-### Screenshots 
+### Screenshot 
+<img width="1850" height="891" alt="image" src="https://github.com/user-attachments/assets/a98b46fd-c4c1-4e7b-9dcc-ff3f498bb681" />
 
 
 ##  Credits
